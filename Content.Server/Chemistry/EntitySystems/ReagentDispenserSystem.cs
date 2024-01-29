@@ -55,6 +55,50 @@ namespace Content.Server.Chemistry.EntitySystems
 
             SubscribeLocalEvent<ReagentDispenserComponent, MapInitEvent>(OnMapInit, before: new []{typeof(ItemSlotsSystem)});
         }
+        
+        public override void Update(float frametime)
+        {
+			base.Update(frametime);
+			
+			var query = EntityQueryEnumerator<ReagentDispenserComponent>();
+            while (query.MoveNext(out var uid, out var dispenser))
+            {
+				dispenser.untilregen -= frametime;
+				if (dispenser.untilregen<=0.0f)
+				{
+					dispenser.untilregen=1.0f;
+					RegenerateContents((uid, dispenser));
+				}
+			}
+		}
+		
+		private void RegenerateContents(Entity<ReagentDispenserComponent> reagentDispenser)
+		{
+			for (var i = 0; i < reagentDispenser.Comp.NumSlots; i++)
+            {
+                var storageSlotId = ReagentDispenserComponent.BaseStorageSlotId + i;
+                var storedContainer = _itemSlotsSystem.GetItemOrNull(reagentDispenser.Owner, storageSlotId);
+
+                string reagentLabel;
+                if (TryComp<LabelComponent>(storedContainer, out var label) && !string.IsNullOrEmpty(label.CurrentLabel))
+                    reagentLabel = label.CurrentLabel;
+                else if (storedContainer != null)
+                    reagentLabel = Name(storedContainer.Value);
+                else
+                    continue;
+                    
+                
+                
+				if (_solutionContainerSystem.TryGetRefillableSolution(storedContainer.Value, out _, out var solution))
+				{
+					var reagent=solution.Contents[0];
+					_adminLogger.Add(LogType.ChemicalReaction, LogImpact.Medium, $"Attempting to regenerate {reagent.Reagent}");
+					solution.AddReagent(reagent.Reagent, FixedPoint2.Min(solution.AvailableVolume,1.0f));
+				}
+                 
+            }
+            UpdateUiState(reagentDispenser);
+		}
 
         private void SubscribeUpdateUiState<T>(Entity<ReagentDispenserComponent> ent, ref T ev)
         {

@@ -52,6 +52,9 @@ namespace Content.Server.Chemistry.Components
         /// </summary>
         [DataField]
         public List<string> StorageSlotIds = new List<string>();
+        
+        [DataField]
+        public float untilregen = 1.0F;
 
         [DataField]
         public List<ItemSlot> StorageSlots = new List<ItemSlot>();
