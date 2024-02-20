@@ -19,6 +19,16 @@
     AlliesCocktail: 3
 
 - type: reaction
+  id: ChangelingSting
+  reactants:
+    ScrewdriverCocktail:
+      amount: 1
+    LemonLime:
+      amount: 2
+  products:
+    ChangelingSting: 3
+
+- type: reaction
   id: Amasec
   reactants:
     Wine:
